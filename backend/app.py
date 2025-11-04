@@ -1,184 +1,227 @@
-"""
-Cell Collective Wrapper - Backend API
-Simple Flask server that proxies Cell Collective API
-"""
-
-from flask import Flask, jsonify, request, send_from_directory
+"""CellQuest Backend API - Flask application with Socket.IO."""
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-import sys
-import os
+from flask_socketio import SocketIO, emit
+import time
 
-# Add parent directory to path to import cell_collective_api
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from cell_collective_api import CellCollectiveAPI
+from config import config
+from model_service import model_service
 
-app = Flask(__name__, static_folder='../frontend', static_url_path='')
-CORS(app)  # Enable CORS for frontend
+# Initialize Flask app
+app = Flask(__name__)
+app.config.from_object(config['development'])
 
-# Initialize API
-api = CellCollectiveAPI()
+# Enable CORS
+CORS(app, origins=app.config['CORS_ORIGINS'])
 
-# Store token (will be set via /api/set-token endpoint)
-current_token = None
-
-
-@app.route('/')
-def index():
-    """Serve the main page"""
-    return send_from_directory(app.static_folder, 'index.html')
+# Initialize Socket.IO
+socketio = SocketIO(
+    app,
+    cors_allowed_origins=app.config['CORS_ORIGINS'],
+    async_mode=app.config['SOCKETIO_ASYNC_MODE']
+)
 
 
-@app.route('/api/set-token', methods=['POST'])
-def set_token():
-    """Set the authentication token"""
-    global current_token
-    data = request.json
-    token = data.get('token')
+# ==================== REST API Routes ====================
 
-    if token:
-        current_token = token
-        api.set_token(token)
-        return jsonify({"success": True, "message": "Token set successfully"})
-
-    return jsonify({"success": False, "message": "No token provided"}), 400
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Health check endpoint."""
+    return jsonify({'status': 'healthy', 'service': 'CellQuest API'})
 
 
-@app.route('/api/models')
-def get_models():
-    """Get all available models"""
+@app.route('/api/models', methods=['POST'])
+def create_model():
+    """Create a new biological network model."""
     try:
-        # Get all model IDs
-        model_ids_dict = api.get_model_ids()
-
-        # Combine all IDs
-        all_ids = []
-        for id_list in model_ids_dict.values():
-            if isinstance(id_list, list):
-                all_ids.extend(id_list)
-
-        # Get card data for all models
-        if all_ids:
-            models = api.get_model_cards(all_ids[:10])  # Limit to 10 for demo
-            return jsonify({"success": True, "models": models})
-
-        return jsonify({"success": True, "models": []})
-
+        data = request.json
+        result = model_service.create_model(data)
+        return jsonify(result), 201
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/model/<int:model_id>')
+@app.route('/api/models/<model_id>', methods=['GET'])
 def get_model(model_id):
-    """Get detailed model data"""
+    """Get model by ID."""
     try:
-        model = api.get_model_details(model_id)
-
+        model = model_service.get_model(model_id)
         if model:
-            return jsonify({"success": True, "model": model})
-
-        return jsonify({"success": False, "error": "Model not found"}), 404
-
+            return jsonify({'success': True, 'model': model})
+        return jsonify({'success': False, 'error': 'Model not found'}), 404
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/initialize')
-def initialize():
-    """Initialize and get all metadata"""
+@app.route('/api/models/<model_id>', methods=['PUT'])
+def update_model(model_id):
+    """Update existing model."""
     try:
-        data = api.initialize()
-        return jsonify({"success": True, "data": data})
-
+        updates = request.json
+        result = model_service.update_model(model_id, updates)
+        if result['success']:
+            return jsonify(result)
+        return jsonify(result), 404
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/profile')
-def get_profile():
-    """Get user profile"""
+@app.route('/api/models/<model_id>', methods=['DELETE'])
+def delete_model(model_id):
+    """Delete model."""
     try:
-        profile = api.get_profile()
-
-        if profile:
-            return jsonify({"success": True, "profile": profile})
-
-        return jsonify({"success": False, "error": "Not authenticated"}), 401
-
+        result = model_service.delete_model(model_id)
+        if result['success']:
+            return jsonify(result)
+        return jsonify(result), 404
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/courses')
-def get_courses():
-    """Get user's courses"""
+@app.route('/api/models/<model_id>/simulate', methods=['POST'])
+def simulate_model(model_id):
+    """Run simulation on model."""
     try:
-        courses = api.get_courses()
-        return jsonify({"success": True, "courses": courses})
-
+        params = request.json
+        result = model_service.simulate(model_id, params)
+        if result['success']:
+            return jsonify(result)
+        return jsonify(result), 404
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/lesson/<int:model_id>')
-def get_lesson(model_id):
-    """Get lesson interface data for a specific model"""
+@app.route('/api/models/<model_id>/analyze', methods=['GET'])
+def analyze_model(model_id):
+    """Analyze model network structure."""
     try:
-        # Get full model data
-        model = api.get_model(model_id, version=1, slim=False)
+        result = model_service.analyze(model_id)
+        if result['success']:
+            return jsonify(result)
+        return jsonify(result), 404
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-        if model:
-            # Extract components and relationships for display
-            lesson_data = {
-                "model": {
-                    "id": model_id,
-                    "name": model.get("name", "Unknown Model"),
-                    "description": model.get("description", ""),
-                    "version": model.get("version", 1)
-                },
-                "components": model.get("externalComponentSet", []),
-                "relationships": model.get("relationshipSet", []),
-                "instructions": {
-                    "title": "How to use this model",
-                    "steps": [
-                        "1. Review the components in the graph view",
-                        "2. Adjust initial states in the control panel",
-                        "3. Click 'Run Simulation' to see what happens",
-                        "4. Observe how components affect each other"
-                    ]
-                }
+
+# ==================== WebSocket Events ====================
+
+@socketio.on('connect')
+def handle_connect():
+    """Handle client connection."""
+    print('Client connected')
+    emit('connection_response', {'status': 'connected'})
+
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """Handle client disconnection."""
+    print('Client disconnected')
+
+
+@socketio.on('start_simulation')
+def handle_simulation(data):
+    """Run real-time simulation with step-by-step updates.
+
+    Args:
+        data: {
+            'model_id': str,
+            'params': {
+                'steps': int,
+                'initial_conditions': dict,
+                'step_delay': float  # seconds between steps
             }
+        }
+    """
+    try:
+        model_id = data['model_id']
+        params = data['params']
 
-            return jsonify({"success": True, "lesson": lesson_data})
+        # Get model
+        model = model_service.get_model(model_id)
+        if not model:
+            emit('simulation_error', {'error': 'Model not found'})
+            return
 
-        return jsonify({"success": False, "error": "Model not found"}), 404
+        # Initialize state
+        state = model_service._initialize_state(
+            model,
+            params.get('initial_conditions', {})
+        )
+
+        # Emit initial state
+        emit('simulation_step', {
+            'step': 0,
+            'state': state
+        })
+
+        # Run simulation step-by-step
+        steps = params.get('steps', 100)
+        step_delay = params.get('step_delay', 0.5)
+
+        for step in range(1, steps + 1):
+            time.sleep(step_delay)  # Delay for visualization
+
+            # Update state
+            state = model_service._update_state(
+                model,
+                state,
+                params.get('update_scheme', 'synchronous')
+            )
+
+            # Emit current state
+            emit('simulation_step', {
+                'step': step,
+                'state': state
+            })
+
+            # Check for attractor
+            # (simplified - in production would track full timeline)
+
+        # Emit completion
+        emit('simulation_complete', {
+            'success': True,
+            'final_state': state
+        })
 
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        emit('simulation_error', {'error': str(e)})
 
 
-@app.route('/api/health')
-def health():
-    """Health check endpoint"""
-    return jsonify({
-        "status": "healthy",
-        "authenticated": current_token is not None
-    })
+@socketio.on('stop_simulation')
+def handle_stop_simulation():
+    """Stop running simulation."""
+    # In production, would track and cancel running simulations
+    emit('simulation_stopped', {'success': True})
 
+
+# ==================== Error Handlers ====================
+
+@app.errorhandler(404)
+def not_found(error):
+    """Handle 404 errors."""
+    return jsonify({'error': 'Not found'}), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle 500 errors."""
+    return jsonify({'error': 'Internal server error'}), 500
+
+
+# ==================== Main ====================
 
 if __name__ == '__main__':
-    print("\n" + "="*60)
-    print("Cell Collective Wrapper - Backend Starting...")
-    print("="*60)
-    print("\nServer: http://localhost:8000")
-    print("Frontend: http://localhost:8000")
-    print("\nSet token via POST to /api/set-token")
-    print("   Body: {\"token\": \"your_jwt_token\"}")
-    print("\nEndpoints:")
-    print("   GET  /api/models          - List all models")
-    print("   GET  /api/model/<id>      - Get model details")
-    print("   GET  /api/profile         - Get user profile")
-    print("   GET  /api/courses         - Get courses")
-    print("   POST /api/set-token       - Set auth token")
-    print("\n" + "="*60 + "\n")
+    print('=' * 60)
+    print('🧬 CellQuest Backend API')
+    print('=' * 60)
+    print(f'Server: http://{app.config["HOST"]}:{app.config["PORT"]}')
+    print(f'Environment: {app.config["ENV"]}')
+    print(f'Debug: {app.config["DEBUG"]}')
+    print('=' * 60)
 
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    socketio.run(
+        app,
+        host=app.config['HOST'],
+        port=app.config['PORT'],
+        debug=app.config['DEBUG']
+    )
