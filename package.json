@@ -1,0 +1,25 @@
+{
+  "name": "cell-collective-k12-wrapper",
+  "version": "1.0.0",
+  "description": "**Kid-friendly interface for Cell Collective biological simulations**",
+  "main": "index.js",
+  "scripts": {
+    "explore": "node explore-site.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/charlesmartinedd/cell-collective-k12-wrapper.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/charlesmartinedd/cell-collective-k12-wrapper/issues"
+  },
+  "homepage": "https://github.com/charlesmartinedd/cell-collective-k12-wrapper#readme",
+  "dependencies": {
+    "@playwright/test": "^1.56.1",
+    "playwright": "^1.56.1"
+  }
+}

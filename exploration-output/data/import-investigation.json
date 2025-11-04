@@ -1,0 +1,33 @@
+{
+  "timestamp": "2025-11-04T00:31:40.002Z",
+  "importInfo": {
+    "fileInputs": [
+      {
+        "id": "",
+        "name": "fileImportInput",
+        "accept": "",
+        "multiple": true,
+        "className": "",
+        "parent": ""
+      },
+      {
+        "id": "",
+        "name": "fileImportInput",
+        "accept": "",
+        "multiple": true,
+        "className": "",
+        "parent": ""
+      },
+      {
+        "id": "",
+        "name": "fileImportInput",
+        "accept": "",
+        "multiple": true,
+        "className": "",
+        "parent": ""
+      }
+    ],
+    "importButtons": []
+  },
+  "notes": "Investigated import functionality for logical models"
+}
