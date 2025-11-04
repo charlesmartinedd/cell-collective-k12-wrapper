@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Diagnostic Test</title>
+    <script>
+        window.addEventListener('error', (e) => {
+            document.body.innerHTML += `<div style="color: red; padding: 20px; background: #ffe0e0; margin: 10px;">
+                <strong>ERROR:</strong> ${e.message}<br>
+                <strong>File:</strong> ${e.filename}:${e.lineno}:${e.colno}
+            </div>`;
+        });
+    </script>
+</head>
+<body>
+    <h1>Testing localhost:5600</h1>
+    <iframe src="http://localhost:5600" style="width: 100%; height: 800px; border: 2px solid blue;"></iframe>
+</body>
+</html>

@@ -1,12 +1,12 @@
 # Cell Collective Research Platform - Exploration Summary
 
-**Explored:** 2025-11-04T00:23:22.735Z
+**Explored:** 2025-11-04T01:55:52.888Z
 
 ## Overview
 
 - **Pages Explored:** 7
-- **API Endpoints Discovered:** 18
-- **Total Network Requests:** 391
+- **API Endpoints Discovered:** 16
+- **Total Network Requests:** 398
 
 ## Pages
 
@@ -76,9 +76,9 @@
 ## API Endpoints
 
 - POST https://o4506026617864192.ingest.sentry.io/api/4506026878959616/envelope/?sentry_key=f2b6fefc4dbbceb9b6befee7b122ff99&sentry_version=7&sentry_client=sentry.javascript.react%2F8.26.0
-- POST https://www.youtube.com/youtubei/v1/log_event?alt=json
 - POST https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/Create
 - POST https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/GenerateIT
+- POST https://www.youtube.com/youtubei/v1/log_event?alt=json
 - GET https://research.cellcollective.org/web/_api/initialize
 
 ## Network Activity
@@ -86,13 +86,13 @@
 ### Resource Types
 
 - **document:** 14
-- **script:** 18
-- **stylesheet:** 25
+- **script:** 21
+- **stylesheet:** 26
 - **image:** 83
 - **xhr:** 34
-- **font:** 10
+- **fetch:** 10
+- **font:** 12
 - **ping:** 1
-- **fetch:** 12
 
 ## Next Steps
 

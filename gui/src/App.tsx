@@ -1,111 +1,74 @@
 import { useState } from 'react'
-import Dashboard from './components/Dashboard'
-import ModelBrowser from './components/ModelBrowser'
-import ModelBuilder from './components/ModelBuilder'
-
-type View = 'dashboard' | 'browse' | 'build' | 'simulate'
+import CellWrapperWithControls from './components/CellWrapperWithControls'
+import { getDefaultConfig, getAdvancedConfig, getMinimalConfig } from './config/FeatureConfig'
+import type { FeatureConfig } from './config/FeatureConfig'
+import './styles/index.css'
+import './App.css'
 
 function App() {
-  const [currentView, setCurrentView] = useState<View>('dashboard')
+  console.log('🚀 App component mounting...')
+  const [config, setConfig] = useState<FeatureConfig>(getDefaultConfig())
+  const [configMode, setConfigMode] = useState<'default' | 'advanced' | 'minimal'>('default')
+  console.log('✅ App state initialized, config mode:', configMode)
 
+  const handleConfigChange = (mode: 'default' | 'advanced' | 'minimal') => {
+    setConfigMode(mode)
+    switch (mode) {
+      case 'default':
+        setConfig(getDefaultConfig())
+        break
+      case 'advanced':
+        setConfig(getAdvancedConfig())
+        break
+      case 'minimal':
+        setConfig(getMinimalConfig())
+        break
+    }
+  }
+
+  console.log('📦 App rendering...')
   return (
-    <div className="min-h-screen">
-      {/* Navigation Header - Apple/Microsoft inspired */}
-      <header className="glass sticky top-0 z-50 shadow-soft">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center gap-3 animate-fade-in">
-              <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center text-white text-2xl font-bold shadow-medium">
-                🧬
-              </div>
-              <div>
-                <h1 className="text-2xl font-display font-bold text-gradient-primary">
-                  Cell Explorer
-                </h1>
-                <p className="text-sm text-gray-600">Learn Biology Through Simulation</p>
-              </div>
-            </div>
+    <div className="app">
+      {/* Configuration Panel (for testing/demo) */}
+      <div style={{
+        position: 'fixed',
+        top: '10px',
+        left: '10px',
+        zIndex: 10001,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '12px 20px',
+        borderRadius: '12px',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        color: 'white',
+        fontSize: '14px',
+        fontWeight: '600'
+      }}>
+        <label style={{ margin: 0 }}>Configuration Mode:</label>
+        <select
+          value={configMode}
+          onChange={(e) => handleConfigChange(e.target.value as any)}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '8px',
+            border: 'none',
+            background: 'white',
+            color: '#667eea',
+            fontWeight: '600',
+            fontSize: '14px',
+            cursor: 'pointer'
+          }}
+        >
+          <option value="default">Default (K-12 Student)</option>
+          <option value="minimal">Minimal (Simple)</option>
+          <option value="advanced">Advanced (Research)</option>
+        </select>
+      </div>
 
-            {/* Navigation */}
-            <nav className="hidden md:flex gap-2">
-              <button
-                onClick={() => setCurrentView('dashboard')}
-                className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
-                  currentView === 'dashboard'
-                    ? 'bg-primary-500 text-white shadow-medium'
-                    : 'bg-white text-gray-700 hover:bg-primary-50'
-                }`}
-              >
-                🏠 Home
-              </button>
-              <button
-                onClick={() => setCurrentView('browse')}
-                className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
-                  currentView === 'browse'
-                    ? 'bg-primary-500 text-white shadow-medium'
-                    : 'bg-white text-gray-700 hover:bg-primary-50'
-                }`}
-              >
-                📚 Browse Models
-              </button>
-              <button
-                onClick={() => setCurrentView('build')}
-                className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
-                  currentView === 'build'
-                    ? 'bg-primary-500 text-white shadow-medium'
-                    : 'bg-white text-gray-700 hover:bg-primary-50'
-                }`}
-              >
-                🔬 Build Model
-              </button>
-              <button
-                onClick={() => setCurrentView('simulate')}
-                className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
-                  currentView === 'simulate'
-                    ? 'bg-primary-500 text-white shadow-medium'
-                    : 'bg-white text-gray-700 hover:bg-primary-50'
-                }`}
-              >
-                ⚡ Simulate
-              </button>
-            </nav>
-
-            {/* User Menu */}
-            <div className="flex items-center gap-3">
-              <button className="btn btn-outline text-sm">
-                Sign In
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
-        <div className="animate-fade-in">
-          {currentView === 'dashboard' && <Dashboard onNavigate={setCurrentView} />}
-          {currentView === 'browse' && <ModelBrowser />}
-          {currentView === 'build' && <ModelBuilder />}
-          {currentView === 'simulate' && (
-            <div className="text-center py-20">
-              <div className="inline-block p-8 rounded-3xl gradient-primary text-white shadow-strong animate-scale-in">
-                <h2 className="text-4xl font-bold mb-4">⚡ Simulation Coming Soon!</h2>
-                <p className="text-lg opacity-90">Watch cells come alive with interactive simulations</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="mt-20 py-8 glass">
-        <div className="container mx-auto px-6 text-center text-gray-600">
-          <p className="text-sm">
-            Built with ❤️ for K-12 Students | Powered by Cell Collective
-          </p>
-        </div>
-      </footer>
+      {/* Main Wrapper with Controls */}
+      <CellWrapperWithControls config={config} />
     </div>
   )
 }
